@@ -1,23 +1,40 @@
-import { LightningElement, api } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 import saveTasks from '@salesforce/apex/TaskBoardController.saveTasks';
 
 export default class TaskCard extends LightningElement {
     //NOTE: @api properties are immutable
-    @api task
+    @api task;
+    @track tempTask; 
+    @track editMode = false;
 
     edit() {
-        console.log('enable editing here!');
+        this.tempTask = Object.assign({}, this.task);
+        this.editMode = true;
+    }
+
+    cancelEdit() {
+        this.editMode = false;
+    }
+
+    handleChange(event) {
+        const field = event.target.name;
+        this.tempTask[field] = event.target.value;
     }
 
     //Basic wiring to a save method in Salesforce server
     save() {
-        let taskToSave = Object.assign({}, this.task);
+        let taskToSave = Object.assign({}, this.tempTask);
         saveTasks({ tasks: [taskToSave] })
             .then(() => {
-                console.log('Success!');
+                this.task = Object.assign({}, this.tempTask);
+                this.editMode = false;
             })
             .catch(() => {
                 console.log('Something went wrong...');
             })
+    }
+    
+    drag(ev){
+        ev.dataTransfer.setData('task', JSON.stringify(this.task));
     }
 }

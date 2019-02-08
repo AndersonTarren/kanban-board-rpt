@@ -1,0 +1,18 @@
+<template>
+    <div title={category} ondrop={handleDrop} ondragover={handleDragOver} style="min-height:400px">
+        <lightning-layout-item padding="horizontal-small" size="2">
+            <lightning-layout multiple-rows="true" >
+                <lightning-layout-item size="12" class="slds-m-bottom_medium">
+                    <lightning-card class="slds-p-bottom_medium">
+                        <div  slot="title">{category}</div>
+                    </lightning-card>
+                </lightning-layout-item>
+                <template for:each={tasks} for:item="task">
+                    <lightning-layout-item key={task.Id} size="12" class="">
+                        <c-task-card task={task}></c-task-card>
+                    </lightning-layout-item>
+                </template>
+            </lightning-layout>
+        </lightning-layout-item>
+    </div>
+</template>

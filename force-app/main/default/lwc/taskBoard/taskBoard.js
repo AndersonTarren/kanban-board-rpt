@@ -1,41 +1,67 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import getTasks from '@salesforce/apex/TaskBoardController.getTasks';
+import saveTasks from '@salesforce/apex/TaskBoardController.saveTasks';
 
 export default class TaskBoard extends LightningElement {
     //Allows the component to be aware of the ID of the record (i.e. the Account)
     //that it is embedded on
     @api recordId;
-
-    @track notStartedTasks = [];
-    @track inProgressTasks = [];
-    @track completedTasks = [];
-    @track waitingOnSomeoneTasks = [];
-    @track deferredTasks = [];
+    @track taskMap = {};
+    @track tasks = [
+        {heading : 'Not Started', tasks : []},
+        {heading : 'In Progress', tasks : []},
+        {heading : 'Completed', tasks : []},
+        {heading : 'Waiting on someone else', tasks : []},
+        {heading : 'Deferred', tasks : []}
+    ];
     
     @wire(getTasks, { recordId: '$recordId' })
     processTasks({ error, data }) {
-        //Seems repetitive, is there a better way to do this?
         if (data) {
             data.forEach(element => {
-                if (element.Status === 'Not Started') {
-                    this.notStartedTasks.push(element);
-                }
-                else if (element.Status === 'In Progress') {
-                    this.inProgressTasks.push(element);
-                }
-                else if (element.Status === 'Completed') {
-                    this.completedTasks.push(element);
-                }
-                else if (element.Status === 'Waiting on someone else') {
-                    this.waitingOnSomeoneTasks.push(element);
-                }
-                else if (element.Status === 'Deferred') {
-                    this.deferredTasks.push(element);
-                }
+                this.taskMap[element.Id] = element;
             });
+            this.mapTasks();
             this.record = data;
         } else if (error) {
             console.log(error);
         }
+    }
+
+    mapTasks(){
+        const catMap = [];
+        for (const [key, value] of Object.entries(this.taskMap)) {
+            if(!catMap.hasOwnProperty(value.Status)){
+                catMap[value.Status] = [];
+            }
+            catMap[value.Status].push(value);
+        }
+        this.tasks.forEach(element => {
+            element.tasks = [];
+            if(catMap.hasOwnProperty(element.heading)){
+                element.tasks = catMap[element.heading];
+            }
+        });
+    }
+
+    handleDropped(event){
+        this.save(event.detail);
+    }
+
+    //Basic wiring to a save method in Salesforce server
+    save(taskToSave) {
+        saveTasks({ tasks: [taskToSave] })
+            .then(() => {
+                //this.selectedContact = this.contacts.data.find(contact => contact.Id === contactId);
+                if(this.taskMap.hasOwnProperty(taskToSave.Id)){
+                    this.taskMap[taskToSave.Id] = taskToSave;
+                    this.mapTasks();
+                } else {
+                    console.log('Something went wrong...');
+                }
+            })
+            .catch(() => {
+                console.log('Something went wrong...');
+            })
     }
 }

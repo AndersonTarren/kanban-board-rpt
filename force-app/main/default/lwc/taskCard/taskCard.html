@@ -1,19 +1,37 @@
-<template>
-    <lightning-card icon-name="standard:task">
-        <div slot="title">{task.Subject}</div>
-        <div class="slds-card__body slds-card__body_inner">
-            <dl>
-                <dt>Owner:</dt>
-                <dd class="ownerName">{task.Owner.Name}</dd>
-                <dt>Due Date:</dt>
-                <dd class="dueDate">{task.ActivityDate}</dd>
-                <dt>Comments:</dt>
-                <dd class="description">{task.Description}</dd>
-            </dl>
-        </div>
-
-        <div slot="actions">
-            <lightning-button-icon icon-name="utility:edit" onclick={edit}>Edit</lightning-button-icon>
-        </div>
-    </lightning-card>
+<template >
+    <div draggable="true" ondragstart={drag} id={task.Id} class="slds-p-bottom_medium">
+        <lightning-card icon-name="standard:task">
+            <div if:false={editMode}>
+                <div class="slds-card__body slds-card__body_inner">
+                    <div slot="title">{task.Subject}</div>
+                    <dl>
+                        <dt>Owner:</dt>
+                        <dd class="ownerName">{task.Owner.Name}</dd>
+                        <dt>Due Date:</dt>
+                        <dd class="dueDate">{task.ActivityDate}</dd>
+                        <dt>Comments:</dt>
+                        <dd class="description">{task.Description}</dd>
+                    </dl>
+                </div>
+            </div>
+            <div if:true={editMode}>
+                <div class="slds-card__body slds-card__body_inner">
+                    <div slot="title"><lightning-input name="Subject" label="Title" value={tempTask.Subject} onchange={handleChange}></lightning-input></div>
+                    <dl>
+                        <lightning-input name="ActivityDate" label="Due Date" value={tempTask.ActivityDate} onchange={handleChange}></lightning-input>
+                        <lightning-input name="Description" label="Comments" value={tempTask.Description} onchange={handleChange}></lightning-input>
+                    </dl>
+                </div>
+            </div>
+            <div slot="actions">
+                <div if:false={editMode}>
+                    <lightning-button-icon icon-name="utility:edit" onclick={edit}>Edit</lightning-button-icon>
+                </div>
+                <div if:true={editMode}>
+                    <lightning-button-icon icon-name="utility:check" onclick={save}>Save</lightning-button-icon>
+                    <lightning-button-icon icon-name="utility:close" onclick={cancelEdit}>Cancel</lightning-button-icon>
+                </div>
+            </div>
+        </lightning-card>
+    </div>
 </template>
